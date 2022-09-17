@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     // when a TextView is clicked, we know which cell it is
     private ArrayList<GridCell> cells;
 
-    private ArrayList< ArrayList<GridCell> > cellsByLoc;
+    private ArrayList< ArrayList<Integer> > indexByLocation;
     private boolean gameStarted = true;
 
     private int dpToPixel(int dp) {
@@ -35,17 +35,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         cells = new ArrayList<GridCell>();
-        cellsByLoc = new ArrayList<ArrayList<GridCell> >();
+        indexByLocation = new ArrayList< ArrayList<Integer> >();
 
         // add dynamically created cells
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
+
+        int counter = 0;
         for (int i = 0; i<=9; i++) {
-            ArrayList<GridCell> row = new ArrayList<>();
+            ArrayList<Integer> row = new ArrayList<>();
             for (int j=0; j<=7; j++) {
                 TextView tv = new TextView(this);
                 tv.setHeight( dpToPixel(32) );
                 tv.setWidth( dpToPixel(32) );
-                tv.setTextSize( 12 );//dpToPixel(32) );
+                tv.setTextSize( 18 );//dpToPixel(32) );
                 tv.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                 tv.setTextColor(Color.GREEN);
                 tv.setBackgroundColor(Color.GREEN);
@@ -58,10 +60,12 @@ public class MainActivity extends AppCompatActivity {
 
                 grid.addView(tv, lp);
                 GridCell gc = new GridCell(tv, i, j);
-                row.add(gc);
+                row.add(counter);
+                counter++;
                 cells.add(gc);
+
             }
-            cellsByLoc.add(row);
+            indexByLocation.add(row);
         }
 
     }
@@ -114,12 +118,18 @@ public class MainActivity extends AppCompatActivity {
         cells.get(random_int4).setBomb(true);
 
         addNumbersToCells();
+
+        //onClickTV(cells.get(indexByLocation.get(0).get(0)).getTv());
+
+
+
         return;
 
     }
 
     //BFS out from the current view and open all views that don't have a number as well as ones on the edges
     private void BFS(TextView view){
+
 
 
 
@@ -138,7 +148,9 @@ public class MainActivity extends AppCompatActivity {
                     int c = gc.getCol()+dc;
 
                     if(r>=0 && r<=9 && c>=0 && c<=7){
-                        if(cellsByLoc.get(r).get(c).isBomb()){
+                        //if the cell that corresponds to the location we are checking is a bomb
+                        //increase bombs in the area for the current cell we are evaluating
+                        if(cells.get(indexByLocation.get(r).get(c)).isBomb()){
                             gc.increaseBombsInArea();
                         }
                     }
@@ -154,17 +166,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickTV(View view){
         TextView tv = (TextView) view;
+        GridCell gc = getGridCellFromTextView(tv);
 
         //if the game has not started yet, start the game
         if(gameStarted) {
             //run function to intialize the bombs
             initalizeBombs(tv);
-
             gameStarted = false;
-            return;
         }
         //show bomb and end the game
-        else if(getGridCellFromTextView(tv).isBomb()){
+        if(gc.isBomb()){
             tv.setTextColor(Color.RED);
             tv.setBackgroundColor(Color.RED);
             //run function to end the game . . .
@@ -175,29 +186,29 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         // its a flagged cell, unflag it
-        else if(getGridCellFromTextView(tv).isFlagged()){
+        else if(gc.isFlagged()){
 
             return;
         }
         //its a number block, in which case just reveal it
-        else if(getGridCellFromTextView(tv).getBombsInArea()>0){
+        else if(gc.getBombsInArea()>0){
+            tv.setText(String.valueOf(gc.getBombsInArea()));
             tv.setTextColor(Color.GRAY);
             tv.setBackgroundColor(Color.LTGRAY);
         }
+
         //its an empty block, run BFS
-        else if(getGridCellFromTextView(tv).getBombsInArea()==0){
-
-            //for testing
-            //tv.setText(String.valueOf(getGridCellFromTextView(tv).getRow())+String.valueOf(getGridCellFromTextView(tv).getCol()));
-            tv.setText(String.valueOf(getGridCellFromTextView(tv).getBombsInArea()));
-
+        else if(gc.getBombsInArea()==0){
             //run BFS
 
-
+            //. . .
             tv.setTextColor(Color.GRAY);
             tv.setBackgroundColor(Color.LTGRAY);
 
         }
+
+        //make the revealed boolean true
+        gc.setRevealed(true);
 
     }
 }
