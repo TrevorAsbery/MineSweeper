@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
         final TextView timeView = (TextView) findViewById(R.id.textView);
         int counter = 0;
         for(GridCell gc: cells){
-            if((gc.isFlagged()&&gc.isBomb()) || (gc.isRevealed()&&!gc.isBomb())){
+            if((gc.isBomb()) || (gc.isRevealed()&&!gc.isBomb())){
                 counter++;
             }
         }
@@ -326,13 +326,14 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, DisplayMessageActivity.class);
             intent.putExtra("result", message);
             startActivity(intent);
+            return;
         }
         else if(lost){
-
             String message = "Used " + time + " seconds. \n You Lost \n Try Again!";
             Intent intent = new Intent(this, DisplayMessageActivity.class);
             intent.putExtra("result", message);
             startActivity(intent);
+            return;
         }
 
         //if the game has not started yet, start the game
@@ -349,6 +350,8 @@ public class MainActivity extends AppCompatActivity {
                 flagCount--;
                 ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
                 gc.setFlagged(true);
+                WinGame();
+                return;
 
             } else if (!gc.isRevealed() && gc.isFlagged()) {
                 tv.setText("");
@@ -356,12 +359,13 @@ public class MainActivity extends AppCompatActivity {
                 flagCount++;
                 ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
                 gc.setFlagged(false);
+                WinGame();
+                return;
             }
         }
 
-        // if its flagged check if we won, and move on
+        // if its flagged, move on
         if(gc.isFlagged()){
-            WinGame();
             return;
         }
         //show bomb and end the game
