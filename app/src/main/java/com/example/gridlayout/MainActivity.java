@@ -3,6 +3,7 @@ package com.example.gridlayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -30,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean running = false;
     private boolean flagTool = false;
     private int flagCount = 4;
+    private boolean won = false;
+    private boolean lost = false;
 
     private int dpToPixel(int dp) {
         float density = Resources.getSystem().getDisplayMetrics().density;
@@ -221,11 +224,30 @@ public class MainActivity extends AppCompatActivity {
                         }
                         //if neighbor has a number associated with it just reveal it and more on
                         else if (neighbor.getBombsInArea()>0){
+
+                            if(neighbor.isFlagged()) {
+                                TextView tv = neighbor.getTv();
+                                tv.setText("");
+                                tv.setBackgroundColor(Color.GREEN);
+                                flagCount++;
+                                ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
+                                gc.setFlagged(false);
+                            }
                             reveal(neighbor);
                         }
 
                         //if the neighbor is a blank square then add it to queue and BFS that ones neighbors
                         else if(neighbor.getBombsInArea()==0){
+
+                            if(neighbor.isFlagged()) {
+                                TextView tv = neighbor.getTv();
+                                tv.setText("");
+                                tv.setBackgroundColor(Color.GREEN);
+                                flagCount++;
+                                ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
+                                gc.setFlagged(false);
+                            }
+
                             reveal(neighbor);
                             queue.add(neighbor);
                         }
@@ -236,11 +258,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
-
-
-
-
-
 
     }
 
@@ -270,6 +287,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void EndGame(){
         onClickStop();
+        lost = true;
+        won = false;
         for(GridCell gc: cells){
             reveal(gc);
         }
@@ -286,11 +305,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(counter==cells.size()){
-            //change eventually to switch to win screen and play again.
-
-            //...
             onClickStop();
-            timeView.setText("YOU WON!!!");
+            won = true;
+            lost = false;
+            return;
         }
 
 
@@ -301,6 +319,21 @@ public class MainActivity extends AppCompatActivity {
     public void onClickTV(View view){
         TextView tv = (TextView) view;
         GridCell gc = getGridCellFromTextView(tv);
+
+        String time = String.valueOf(clock);
+        if(won){
+            String message = "Used " + time + " seconds. \n You Won! \n Great Work!";
+            Intent intent = new Intent(this, DisplayMessageActivity.class);
+            intent.putExtra("result", message);
+            startActivity(intent);
+        }
+        else if(lost){
+
+            String message = "Used " + time + " seconds. \n You Lost \n Try Again!";
+            Intent intent = new Intent(this, DisplayMessageActivity.class);
+            intent.putExtra("result", message);
+            startActivity(intent);
+        }
 
         //if the game has not started yet, start the game
         if(!gameStarted) {
@@ -316,7 +349,6 @@ public class MainActivity extends AppCompatActivity {
                 flagCount--;
                 ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
                 gc.setFlagged(true);
-                return;
 
             } else if (!gc.isRevealed() && gc.isFlagged()) {
                 tv.setText("");
@@ -324,13 +356,12 @@ public class MainActivity extends AppCompatActivity {
                 flagCount++;
                 ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
                 gc.setFlagged(false);
-                return;
             }
-            WinGame();
         }
 
-        // if its flagged then just don't do anything to it
+        // if its flagged check if we won, and move on
         if(gc.isFlagged()){
+            WinGame();
             return;
         }
         //show bomb and end the game
@@ -398,24 +429,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-
-
-
-
-
-
 }
 
 
-//        int n = findIndexOfCellTextView(tv);
-//        int i = n/COLUMN_COUNT;
-//       // int j = n%COLUMN_COUNT;
-//        tv.setText(String.valueOf(i));
-//        if (tv.getCurrentTextColor() == Color.GRAY) {
-//            tv.setTextColor(Color.GREEN);
-//            tv.setBackgroundColor(Color.parseColor("lime"));
-//        }else {
-//            tv.setTextColor(Color.GRAY);
-//            tv.setBackgroundColor(Color.LTGRAY);
-//        }

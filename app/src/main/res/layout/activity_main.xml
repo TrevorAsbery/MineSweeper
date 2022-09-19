@@ -6,47 +6,20 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
-    <!--    <Button-->
-<!--        android:id="@+id/button"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="100dp"-->
-<!--        android:layout_marginBottom="10dp"-->
-<!--        android:text="Start"-->
-<!--        android:onClick="onClickStart"-->
-<!--        app:layout_constraintBottom_toTopOf="@+id/button2"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.495"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/textView" />-->
-
-<!--    <Button-->
-<!--        android:id="@+id/button2"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="10dp"-->
-<!--        android:layout_marginBottom="10dp"-->
-<!--        android:text="Stop"-->
-<!--        android:onClick="onClickStop"-->
-<!--        app:layout_constraintBottom_toTopOf="@+id/button3"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHorizontal_bias="0.495"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/button" />-->
-
-<!--    <Button-->
-<!--        android:id="@+id/button3"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="10dp"-->
-<!--        android:layout_marginBottom="100dp"-->
-<!--        android:text="Clear"-->
-<!--        android:onClick="onClickClear"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@+id/button2" />-->
+    <TextView
+        android:id="@+id/clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:width="64dp"
+        android:height="64dp"
+        android:text="@string/clock"
+        android:textAlignment="center"
+        android:textSize="32sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.625"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView"
@@ -96,21 +69,21 @@
         android:id="@+id/Flag"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="112dp"
+        android:layout_marginTop="516dp"
         android:width="64dp"
         android:height="64dp"
         android:text="@string/pick"
         android:textAlignment="center"
         android:textSize="32sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.784"
+        app:layout_constraintHorizontal_bias="0.397"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.gridlayout.widget.GridLayout
         android:id="@+id/gridLayout01"
         android:layout_width="346dp"
-        android:layout_height="400dp"
+        android:layout_height="360dp"
         android:layout_gravity="center"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
@@ -121,7 +94,7 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.992"
+        app:layout_constraintVertical_bias="0.498"
         app:rowCount="10">
 
     </androidx.gridlayout.widget.GridLayout>
