@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private int clock = 0;
     private boolean running = false;
     private boolean flagTool = false;
+    private int flagCount = 4;
 
     private int dpToPixel(int dp) {
         float density = Resources.getSystem().getDisplayMetrics().density;
@@ -46,6 +47,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         runTimer();
+
+        TextView flagView = (TextView) findViewById(R.id.Flag);
+        flagView.setOnClickListener(this::toggleFlagTool);
+
+        TextView flagCountView = (TextView) findViewById(R.id.flagCount);
+        flagCountView.setText(String.valueOf(flagCount));
 
         cells = new ArrayList<GridCell>();
         indexByLocation = new ArrayList< ArrayList<Integer> >();
@@ -83,13 +90,16 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void toggleFlagTool(){
+    public void toggleFlagTool(View v){
         // add some code to change the flag at the bottom from a pickaxe to a mine
         //also run this function as an onclick Listener for that bottom flag textView
+        TextView tv = (TextView) v;
         if(flagTool){
+            tv.setText(R.string.pick);
             flagTool = false;
         }
         else{
+            tv.setText(R.string.flag);
             flagTool = true;
         }
 
@@ -158,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
         gc.setRevealed(true);
 
         if(gc.isBomb()){
-            tv.setText("@string/mine");
+            tv.setText(R.string.mine);
             tv.setBackgroundColor(Color.RED);
             //end the game
             EndGame();
@@ -265,6 +275,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //to check if the game has been won yet
+    private void WinGame(){
+        final TextView timeView = (TextView) findViewById(R.id.textView);
+        int counter = 0;
+        for(GridCell gc: cells){
+            if((gc.isFlagged()&&gc.isBomb()) || (gc.isRevealed()&&!gc.isBomb())){
+                counter++;
+            }
+        }
+
+        if(counter==cells.size()){
+            //change eventually to switch to win screen and play again.
+
+            //...
+            onClickStop();
+            timeView.setText("YOU WON!!!");
+        }
+
+
+    }
+
 
 
     public void onClickTV(View view){
@@ -278,20 +309,40 @@ public class MainActivity extends AppCompatActivity {
             onClickStart();
             gameStarted = true;
         }
+        if(flagTool) {
+            if (!gc.isRevealed() && !gc.isFlagged()) {
+                tv.setText(R.string.flag);
+                tv.setBackgroundColor(Color.GREEN);
+                flagCount--;
+                ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
+                gc.setFlagged(true);
+                return;
+
+            } else if (!gc.isRevealed() && gc.isFlagged()) {
+                tv.setText("");
+                tv.setBackgroundColor(Color.GREEN);
+                flagCount++;
+                ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
+                gc.setFlagged(false);
+                return;
+            }
+            WinGame();
+        }
+
+        // if its flagged then just don't do anything to it
+        if(gc.isFlagged()){
+            return;
+        }
         //show bomb and end the game
         if(gc.isBomb()){
-            tv.setText("@string/mine");
+            tv.setText(R.string.mine);
             tv.setBackgroundColor(Color.RED);
             //run function to end the game . . .
             EndGame();
             return;
         }
-        // its a flagged cell, unflag it
-        //this might have to be a separate if statement later depending on if
-        //the flag tool is in use or not
-        else if(gc.isFlagged()){
-            return;
-        }
+
+
         //its a number block, in which case just reveal it
         else if(gc.getBombsInArea()>0){
             reveal(gc);
@@ -304,6 +355,7 @@ public class MainActivity extends AppCompatActivity {
         }
         //make the revealed boolean true
         gc.setRevealed(true);
+        WinGame();
 
     }
 
@@ -333,8 +385,6 @@ public class MainActivity extends AppCompatActivity {
         handler.post(new Runnable() {
             @Override
             public void run() {
-//                int hours =clock/3600;
-//                int minutes = (clock%3600) / 60;
                 int seconds = clock;
                 String time = String.format("%02d", seconds);
                 timeView.setText(time);

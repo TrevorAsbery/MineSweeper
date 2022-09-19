@@ -99,7 +99,7 @@
         android:layout_marginTop="112dp"
         android:width="64dp"
         android:height="64dp"
-        android:text="@string/flag"
+        android:text="@string/pick"
         android:textAlignment="center"
         android:textSize="32sp"
         app:layout_constraintEnd_toEndOf="parent"
