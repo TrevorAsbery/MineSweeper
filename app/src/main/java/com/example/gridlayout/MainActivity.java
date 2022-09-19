@@ -6,9 +6,12 @@ import androidx.gridlayout.widget.GridLayout;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
+
+import java.util.Queue;
 import java.util.Random;
 
 import java.util.ArrayList;
@@ -22,7 +25,10 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<GridCell> cells;
 
     private ArrayList< ArrayList<Integer> > indexByLocation;
-    private boolean gameStarted = true;
+    private boolean gameStarted = false;
+    private int clock = 0;
+    private boolean running = false;
+    private boolean flagTool = false;
 
     private int dpToPixel(int dp) {
         float density = Resources.getSystem().getDisplayMetrics().density;
@@ -33,6 +39,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (savedInstanceState != null) {
+            clock = savedInstanceState.getInt("clock");
+            running = savedInstanceState.getBoolean("running");
+        }
+
+        runTimer();
 
         cells = new ArrayList<GridCell>();
         indexByLocation = new ArrayList< ArrayList<Integer> >();
@@ -66,6 +79,18 @@ public class MainActivity extends AppCompatActivity {
 
             }
             indexByLocation.add(row);
+        }
+
+    }
+
+    private void toggleFlagTool(){
+        // add some code to change the flag at the bottom from a pickaxe to a mine
+        //also run this function as an onclick Listener for that bottom flag textView
+        if(flagTool){
+            flagTool = false;
+        }
+        else{
+            flagTool = true;
         }
 
     }
@@ -119,17 +144,88 @@ public class MainActivity extends AppCompatActivity {
 
         addNumbersToCells();
 
-        //onClickTV(cells.get(indexByLocation.get(0).get(0)).getTv());
-
-
-
         return;
 
     }
 
-    //BFS out from the current view and open all views that don't have a number as well as ones on the edges
-    private void BFS(TextView view){
+    private void reveal(GridCell gc){
 
+        if(gc.isRevealed()){
+            return;
+        }
+
+        TextView tv = gc.getTv();
+        gc.setRevealed(true);
+
+        if(gc.isBomb()){
+            tv.setText("@string/mine");
+            tv.setBackgroundColor(Color.RED);
+            //end the game
+            EndGame();
+            return;
+        }
+
+        if(gc.getBombsInArea()>0){
+            tv.setText(String.valueOf(gc.getBombsInArea()));
+            tv.setTextColor(Color.GRAY);
+            tv.setBackgroundColor(Color.LTGRAY);
+        }
+        else if(gc.getBombsInArea()==0){
+            tv.setTextColor(Color.GRAY);
+            tv.setBackgroundColor(Color.LTGRAY);
+        }
+
+    }
+
+    //BFS out from the current view and open all views that don't have a number as well as ones on the edges
+    private void BFS(GridCell gc){
+
+        GridCell start = gc;
+        ArrayList<GridCell> queue = new ArrayList<>();
+
+        queue.add(start);
+        reveal(start);
+
+        while(queue.size()>0){
+
+            //grab from the end of the queue
+            GridCell v = queue.get(queue.size()-1);
+            //remove last thing in the queue
+            queue.remove(queue.size()-1);
+
+            //for loop through all of the neighbors
+            for(int dr=-1; dr<=1; dr++){
+                for(int dc=-1; dc<=1; dc++){
+
+                    int r = v.getRow()+dr;
+                    int c = v.getCol()+dc;
+
+                    //if the neighbor is inbounds then check it
+                    if(r>=0 && r<=9 && c>=0 && c<=7){
+                        //create neighbor
+                        GridCell neighbor = cells.get(indexByLocation.get(r).get(c));
+
+                        //if neighbor is a bomb or if its already revealed skip it
+                        if(neighbor.isBomb() || neighbor.isRevealed()){
+                            continue;
+                        }
+                        //if neighbor has a number associated with it just reveal it and more on
+                        else if (neighbor.getBombsInArea()>0){
+                            reveal(neighbor);
+                        }
+
+                        //if the neighbor is a blank square then add it to queue and BFS that ones neighbors
+                        else if(neighbor.getBombsInArea()==0){
+                            reveal(neighbor);
+                            queue.add(neighbor);
+                        }
+                    }
+
+                }
+            }
+
+
+        }
 
 
 
@@ -162,6 +258,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void EndGame(){
+        onClickStop();
+        for(GridCell gc: cells){
+            reveal(gc);
+        }
+    }
+
 
 
     public void onClickTV(View view){
@@ -169,48 +272,89 @@ public class MainActivity extends AppCompatActivity {
         GridCell gc = getGridCellFromTextView(tv);
 
         //if the game has not started yet, start the game
-        if(gameStarted) {
+        if(!gameStarted) {
             //run function to intialize the bombs
             initalizeBombs(tv);
-            gameStarted = false;
+            onClickStart();
+            gameStarted = true;
         }
         //show bomb and end the game
         if(gc.isBomb()){
-            tv.setTextColor(Color.RED);
+            tv.setText("@string/mine");
             tv.setBackgroundColor(Color.RED);
             //run function to end the game . . .
-
-
-
-            //. . .
+            EndGame();
             return;
         }
         // its a flagged cell, unflag it
+        //this might have to be a separate if statement later depending on if
+        //the flag tool is in use or not
         else if(gc.isFlagged()){
-
             return;
         }
         //its a number block, in which case just reveal it
         else if(gc.getBombsInArea()>0){
-            tv.setText(String.valueOf(gc.getBombsInArea()));
-            tv.setTextColor(Color.GRAY);
-            tv.setBackgroundColor(Color.LTGRAY);
+            reveal(gc);
         }
 
         //its an empty block, run BFS
         else if(gc.getBombsInArea()==0){
             //run BFS
-
-            //. . .
-            tv.setTextColor(Color.GRAY);
-            tv.setBackgroundColor(Color.LTGRAY);
-
+            BFS(gc);
         }
-
         //make the revealed boolean true
         gc.setRevealed(true);
 
     }
+
+
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putInt("clock", clock);
+        savedInstanceState.putBoolean("running", running);
+    }
+
+    public void onClickStart() {
+        running = true;
+    }
+
+    public void onClickStop() {
+        running = false;
+    }
+    public void onClickClear(View view) {
+        running = false;
+        clock = 0;
+    }
+
+    private void runTimer() {
+        final TextView timeView = (TextView) findViewById(R.id.textView);
+        final Handler handler = new Handler();
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+//                int hours =clock/3600;
+//                int minutes = (clock%3600) / 60;
+                int seconds = clock;
+                String time = String.format("%02d", seconds);
+                timeView.setText(time);
+
+                if (running) {
+                    clock++;
+                }
+                handler.postDelayed(this, 1000);
+            }
+        });
+    }
+
+
+
+
+
+
+
+
+
 }
 
 
