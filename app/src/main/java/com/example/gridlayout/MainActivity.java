@@ -44,29 +44,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (savedInstanceState != null) {
-            clock = savedInstanceState.getInt("clock");
-            running = savedInstanceState.getBoolean("running");
-        }
-
+        //start the timer thread, it will wait for a click to start the clock
         runTimer();
 
+        //this is the toggle view, you want to set its on click listener to the toggle flag function
         TextView flagView = (TextView) findViewById(R.id.Flag);
         flagView.setOnClickListener(this::toggleFlagTool);
 
+        //this view changes with the flag counts, set the intial value
         TextView flagCountView = (TextView) findViewById(R.id.flagCount);
         flagCountView.setText(String.valueOf(flagCount));
 
+        //I use both an array list to store the GridCells
+        //and a 2D arraylist to store their indicies in the cells array list
         cells = new ArrayList<GridCell>();
         indexByLocation = new ArrayList< ArrayList<Integer> >();
 
         // add dynamically created cells
         GridLayout grid = (GridLayout) findViewById(R.id.gridLayout01);
 
+        //count how many cells we have gone through so far
         int counter = 0;
+
+        //for loop through and initialize all cells
         for (int i = 0; i<=9; i++) {
             ArrayList<Integer> row = new ArrayList<>();
             for (int j=0; j<=7; j++) {
+
+                //set up each text view
                 TextView tv = new TextView(this);
                 tv.setHeight( dpToPixel(32) );
                 tv.setWidth( dpToPixel(32) );
@@ -74,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
                 tv.setTextAlignment(TextView.TEXT_ALIGNMENT_CENTER);
                 tv.setTextColor(Color.GREEN);
                 tv.setBackgroundColor(Color.GREEN);
+
+                //set their onclick listener to onClickTV
                 tv.setOnClickListener(this::onClickTV);
 
                 GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
@@ -81,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 lp.rowSpec = GridLayout.spec(i);
                 lp.columnSpec = GridLayout.spec(j);
 
+                //add the view to the grid and create a new grid cell and add that to the arraylists
                 grid.addView(tv, lp);
                 GridCell gc = new GridCell(tv, i, j);
                 row.add(counter);
@@ -94,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void toggleFlagTool(View v){
-        // add some code to change the flag at the bottom from a pickaxe to a mine
-        //also run this function as an onclick Listener for that bottom flag textView
+
+        //toggle between pick and flagging tool
         TextView tv = (TextView) v;
         if(flagTool){
             tv.setText(R.string.pick);
@@ -108,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //find the index of the text view in cells
     private int findIndexOfCellTextView(TextView tv) {
         for (int n=0; n<cells.size(); n++) {
             if (cells.get(n).getTv() == tv)
@@ -118,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    //get the object that corresponds with the text view
     private GridCell getGridCellFromTextView(TextView tv){
         for(GridCell gc: cells){
             if(gc.getTv()==tv){
@@ -127,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    //intialize the four bombs
+    //intialize the four bombs in random locations
     private void initalizeBombs(TextView view){
         int max = cells.size() -1;
         int min = 0;
@@ -155,14 +165,17 @@ public class MainActivity extends AppCompatActivity {
         cells.get(random_int3).setBomb(true);
         cells.get(random_int4).setBomb(true);
 
+        //number all of the cells around the bombs
         addNumbersToCells();
 
         return;
 
     }
 
+    //reveal a cell
     private void reveal(GridCell gc){
 
+        //if already revealed return
         if(gc.isRevealed()){
             return;
         }
@@ -170,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = gc.getTv();
         gc.setRevealed(true);
 
+        //if its a bomb set it to bomb and end the game
         if(gc.isBomb()){
             tv.setText(R.string.mine);
             tv.setBackgroundColor(Color.RED);
@@ -178,11 +192,13 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        //numbered cell reveal
         if(gc.getBombsInArea()>0){
             tv.setText(String.valueOf(gc.getBombsInArea()));
             tv.setTextColor(Color.GRAY);
             tv.setBackgroundColor(Color.LTGRAY);
         }
+        //blank cell reveal
         else if(gc.getBombsInArea()==0){
             tv.setTextColor(Color.GRAY);
             tv.setBackgroundColor(Color.LTGRAY);
@@ -193,14 +209,17 @@ public class MainActivity extends AppCompatActivity {
     //BFS out from the current view and open all views that don't have a number as well as ones on the edges
     private void BFS(GridCell gc){
 
+        //initialize starting grid cell
         GridCell start = gc;
+        //initialize queue
         ArrayList<GridCell> queue = new ArrayList<>();
 
+        //add first cell to queue and reveal it
         queue.add(start);
         reveal(start);
 
+        //BFS algorithm
         while(queue.size()>0){
-
             //grab from the end of the queue
             GridCell v = queue.get(queue.size()-1);
             //remove last thing in the queue
@@ -210,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
             for(int dr=-1; dr<=1; dr++){
                 for(int dc=-1; dc<=1; dc++){
 
+                    //current row and col
                     int r = v.getRow()+dr;
                     int c = v.getCol()+dc;
 
@@ -224,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         //if neighbor has a number associated with it just reveal it and more on
                         else if (neighbor.getBombsInArea()>0){
-
+                            //if the cell is flagged, unflag it before revealing
                             if(neighbor.isFlagged()) {
                                 TextView tv = neighbor.getTv();
                                 tv.setText("");
@@ -233,12 +253,13 @@ public class MainActivity extends AppCompatActivity {
                                 ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
                                 gc.setFlagged(false);
                             }
+                            //reveal numbered cell
                             reveal(neighbor);
                         }
 
                         //if the neighbor is a blank square then add it to queue and BFS that ones neighbors
                         else if(neighbor.getBombsInArea()==0){
-
+                            //if the cell is flagged, unflag it before revealing
                             if(neighbor.isFlagged()) {
                                 TextView tv = neighbor.getTv();
                                 tv.setText("");
@@ -247,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
                                 ((TextView) findViewById(R.id.flagCount)).setText(String.valueOf(flagCount));
                                 gc.setFlagged(false);
                             }
-
+                            //reveal blank cell and add it to the queue
                             reveal(neighbor);
                             queue.add(neighbor);
                         }
@@ -285,6 +306,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //run if the player hits a bomb
     private void EndGame(){
         onClickStop();
         lost = true;
@@ -296,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
 
     //to check if the game has been won yet
     private void WinGame(){
-        final TextView timeView = (TextView) findViewById(R.id.textView);
+        //count up all cells and see if they each satisify the winning conditions
         int counter = 0;
         for(GridCell gc: cells){
             if((gc.isBomb()) || (gc.isRevealed()&&!gc.isBomb())){
@@ -304,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        //if all cells are either a bomb or revealed, end the game with a win
         if(counter==cells.size()){
             onClickStop();
             won = true;
@@ -321,6 +344,9 @@ public class MainActivity extends AppCompatActivity {
         GridCell gc = getGridCellFromTextView(tv);
 
         String time = String.valueOf(clock);
+
+        //if the game has already been decided as a win or a lose before this click
+        //move to the results screen
         if(won){
             String message = "Used " + time + " seconds. \n You Won! \n Great Work!";
             Intent intent = new Intent(this, DisplayMessageActivity.class);
@@ -343,7 +369,9 @@ public class MainActivity extends AppCompatActivity {
             onClickStart();
             gameStarted = true;
         }
+        //if the flag tool is on
         if(flagTool) {
+            //if a cell is not revealed and is not flagged, flag it
             if (!gc.isRevealed() && !gc.isFlagged()) {
                 tv.setText(R.string.flag);
                 tv.setBackgroundColor(Color.GREEN);
@@ -353,7 +381,9 @@ public class MainActivity extends AppCompatActivity {
                 WinGame();
                 return;
 
-            } else if (!gc.isRevealed() && gc.isFlagged()) {
+            }
+            //if a cell is not revealed and is flagged, unflag it
+            else if (!gc.isRevealed() && gc.isFlagged()) {
                 tv.setText("");
                 tv.setBackgroundColor(Color.GREEN);
                 flagCount++;
@@ -377,8 +407,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-
-        //its a number block, in which case just reveal it
+        //its a number block, just reveal it
         else if(gc.getBombsInArea()>0){
             reveal(gc);
         }
@@ -401,18 +430,21 @@ public class MainActivity extends AppCompatActivity {
         savedInstanceState.putBoolean("running", running);
     }
 
+    //starts the timer
     public void onClickStart() {
         running = true;
     }
-
+    //ends the timer
     public void onClickStop() {
         running = false;
     }
+    //clears the timer
     public void onClickClear(View view) {
         running = false;
         clock = 0;
     }
 
+    //runs the timer
     private void runTimer() {
         final TextView timeView = (TextView) findViewById(R.id.textView);
         final Handler handler = new Handler();
@@ -421,6 +453,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 int seconds = clock;
+                //display the seconds the game has been running for
                 String time = String.format("%02d", seconds);
                 timeView.setText(time);
 
