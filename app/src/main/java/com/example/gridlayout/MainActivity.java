@@ -143,21 +143,22 @@ public class MainActivity extends AppCompatActivity {
         int min = 0;
 
         //intialize 4 random cells for bombs and ensure they were not the initial one that was clicked
-        int random_int1 = (int)Math.floor(Math.random()*(max-min+1)+min);
+        //also make sure that they are not the same as another random int
+        int random_int1 = (int)Math.floor(Math.random()*(cells.size()-1));
         while(random_int1==findIndexOfCellTextView(view)){
-            random_int1 = (int)Math.floor(Math.random()*(max-min+1)+min);
+            random_int1 = (int)Math.floor(Math.random()*(cells.size()-1));
         }
-        int random_int2 = (int)Math.floor(Math.random()*(max-min+1)+min);
-        while(random_int2==findIndexOfCellTextView(view)){
-            random_int2 = (int)Math.floor(Math.random()*(max-min+1)+min);
+        int random_int2 = (int)Math.floor(Math.random()*(cells.size()-1));
+        while(random_int2==findIndexOfCellTextView(view)||random_int2==random_int1){
+            random_int2 = (int)Math.floor(Math.random()*(cells.size()-1));
         }
-        int random_int3 = (int)Math.floor(Math.random()*(max-min+1)+min);
-        while(random_int3==findIndexOfCellTextView(view)){
-            random_int3 = (int)Math.floor(Math.random()*(max-min+1)+min);
+        int random_int3 = (int)Math.floor(Math.random()*(cells.size()-1));
+        while(random_int3==findIndexOfCellTextView(view)||random_int3==random_int2||random_int3==random_int1){
+            random_int3 = (int)Math.floor(Math.random()*(cells.size()-1));
         }
-        int random_int4 = (int)Math.floor(Math.random()*(max-min+1)+min);
-        while(random_int4==findIndexOfCellTextView(view)){
-            random_int4 = (int)Math.floor(Math.random()*(max-min+1)+min);
+        int random_int4 = (int)Math.floor(Math.random()*(cells.size()-1));
+        while(random_int4==findIndexOfCellTextView(view)||random_int4==random_int3||random_int4==random_int2||random_int4==random_int1){
+            random_int4 = (int)Math.floor(Math.random()*(cells.size()-1));
         }
 
         cells.get(random_int1).setBomb(true);
@@ -329,6 +330,12 @@ public class MainActivity extends AppCompatActivity {
         //if all cells are either a bomb or revealed, end the game with a win
         if(counter==cells.size()){
             onClickStop();
+            for(GridCell gc: cells){
+                if(gc.isBomb()) {
+                    gc.getTv().setText(R.string.mine);
+                    gc.getTv().setBackgroundColor(Color.GREEN);
+                }
+            }
             won = true;
             lost = false;
             return;
@@ -355,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         else if(lost){
-            String message = "Used " + time + " seconds. \n You Lost \n Try Again!";
+            String message = "Used " + time + " seconds. \n You Lost. \n Try Again!";
             Intent intent = new Intent(this, DisplayMessageActivity.class);
             intent.putExtra("result", message);
             startActivity(intent);
